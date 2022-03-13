@@ -73,7 +73,7 @@ sim:
 	./usimv $(SIM_OPT) $(COV_OPT) -l sim.log
 
 verdi:
-	verdi --ssv -ssy -ssf tb.fsdb -simflow -simBin ./usimv
+	verdi --ssv -ssy -ssf tb.fsdb -simflow -simBin ./usimv &
 
 cov:
 	urg -full64 -format both -dir usimv.vdb

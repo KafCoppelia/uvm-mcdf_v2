@@ -29,4 +29,11 @@ module apb_tb;
     run_test("apb_single_transaction_test");
   end
 
+`ifdef DUMP_FSDB
+    initial begin 
+        $fsdbDumpfile("tb.fsdb");
+        $fsdbDumpvars(0, apb_tb, "+all");
+    end 
+`endif 
+
 endmodule
