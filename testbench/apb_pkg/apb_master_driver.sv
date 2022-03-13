@@ -20,6 +20,7 @@ task apb_master_driver::get_and_drive();
     drive_transfer(req);
     void'($cast(rsp, req.clone()));
     rsp.set_sequence_id(req.get_sequence_id());
+    rsp.set_transaction_id(req.get_transaction_id());
     seq_item_port.item_done(rsp);
     `uvm_info(get_type_name(), "sequencer item_done_triggered", UVM_HIGH)
   end
@@ -45,6 +46,19 @@ task apb_master_driver::do_write(apb_transfer t);
   vif.cb_mst.pwdata <= t.data;
   @(vif.cb_mst);
   vif.cb_mst.penable <= 1;
+  #10ps;
+  wait(vif.pready === 1);
+  #1ps;
+  if(vif.pslverr === 1) begin
+    t.trans_status = ERROR;
+    if(cfg.master_pslverr_status_severity ==  UVM_ERROR)
+      `uvm_error(get_type_name(), "PSLVERR asserted!")
+    else
+      `uvm_warning(get_type_name(), "PSLVERR asserted!")
+  end
+  else begin
+    t.trans_status = OK;
+  end
   repeat(t.idle_cycles) this.do_idle();
 endtask: do_write
 
@@ -57,7 +71,19 @@ task apb_master_driver::do_read(apb_transfer t);
   vif.cb_mst.penable <= 0;
   @(vif.cb_mst);
   vif.cb_mst.penable <= 1;
-  #100ps;
+  #10ps;
+  wait(vif.pready === 1);
+  #1ps;
+  if(vif.pslverr === 1) begin
+    t.trans_status = ERROR;
+    if(cfg.master_pslverr_status_severity ==  UVM_ERROR)
+      `uvm_error(get_type_name(), "PSLVERR asserted!")
+    else
+      `uvm_warning(get_type_name(), "PSLVERR asserted!")
+  end
+  else begin
+    t.trans_status = OK;
+  end
   t.data = vif.prdata;
   repeat(t.idle_cycles) this.do_idle();
 endtask: do_read
@@ -65,8 +91,6 @@ endtask: do_read
 task apb_master_driver::do_idle();
   `uvm_info(get_type_name(), "do_idle ...", UVM_HIGH)
   @(vif.cb_mst);
-  //vif.cb_mst.paddr <= 0;
-  //vif.cb_mst.pwrite <= 0;
   vif.cb_mst.psel <= 0;
   vif.cb_mst.penable <= 0;
   vif.cb_mst.pwdata <= 0;

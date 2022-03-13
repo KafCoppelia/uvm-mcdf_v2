@@ -8,6 +8,7 @@
 //
 //------------------------------------------------------------------------------
 typedef enum {IDLE, WRITE, READ } apb_trans_kind;
+typedef enum {OK, ERROR} apb_trans_status;
 
 
 //------------------------------------------------------------------------------
@@ -22,6 +23,7 @@ class apb_transfer extends uvm_sequence_item;
   rand bit [31:0]      addr;
   rand bit [31:0]      data;
   rand apb_trans_kind  trans_kind; 
+  rand apb_trans_status trans_status;
   rand int idle_cycles;
 
   constraint cstr{

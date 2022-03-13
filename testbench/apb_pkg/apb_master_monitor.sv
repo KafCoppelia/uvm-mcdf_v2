@@ -5,13 +5,7 @@
 function apb_master_monitor::new(string name, uvm_component parent=null);
   super.new(name, parent);
   item_collected_port = new("item_collected_port",this);
-  trans_collected = new();
 endfunction:new
-
-// build
-function void apb_master_monitor::build();
-   super.build();
-endfunction : build  
 
 task apb_master_monitor::monitor_transactions();
    forever begin
@@ -42,28 +36,26 @@ endtask // run
   
   
 task apb_master_monitor::collect_transfer();
-  apb_transfer t;
   // Advance clock
-  @(vif.cb_mon);
-  if(vif.cb_slv.psel === 1'b1 && vif.cb_slv.penable === 1'b0) begin
-    t = apb_transfer::type_id::create("t");
-    case(vif.cb_slv.pwrite)
-      1'b1    : begin
-                  @(vif.cb_mon);
-                  t.addr = vif.cb_mon.paddr;
-                  t.data = vif.cb_mon.pwdata;
-                  t.trans_kind = WRITE;
-                end 
-      1'b0    : begin
-                  @(vif.cb_mon);
-                  t.addr = vif.cb_mon.paddr;
-                  t.data = vif.cb_mon.prdata;
-                  t.trans_kind = READ;
-                end
-      default : `uvm_error(get_type_name(), "ERROR pwrite signal value")
-    endcase
-    item_collected_port.write(t);
-  end
+  @(vif.cb_mon iff (vif.cb_mon.psel === 1'b1 && vif.cb_mon.penable === 1'b0));
+  trans_collected = apb_transfer::type_id::create("trans_collected");
+  case(vif.cb_mon.pwrite)
+    1'b1    : begin
+                @(vif.cb_mon iff vif.cb_mon.pready === 1'b1);
+                trans_collected.addr = vif.cb_mon.paddr;
+                trans_collected.data = vif.cb_mon.pwdata;
+                trans_collected.trans_kind = WRITE;
+                trans_collected.trans_status = vif.cb_mon.pslverr === 1'b0 ? OK : ERROR;
+              end 
+    1'b0    : begin
+                @(vif.cb_mon iff vif.cb_mon.pready === 1'b1);
+                trans_collected.addr = vif.cb_mon.paddr;
+                trans_collected.data = vif.cb_mon.prdata;
+                trans_collected.trans_kind = READ;
+                trans_collected.trans_status = vif.cb_mon.pslverr === 1'b0 ? OK : ERROR;
+              end
+    default : `uvm_error(get_type_name(), "ERROR pwrite signal value")
+  endcase
 endtask: collect_transfer 
 
 

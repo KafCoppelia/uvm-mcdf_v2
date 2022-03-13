@@ -41,9 +41,6 @@ class apb_master_monitor extends uvm_monitor;
    // new - constructor     
    extern function new(string name, uvm_component parent=null);
 
-   // uvm build phase
-   extern function void build();
-
    // uvm run phase
    extern virtual task run();
 
