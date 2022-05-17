@@ -1,46 +1,46 @@
+`ifndef APB_INTERFACE_SV
+`define APB_INTERFACE_SV
 
-`ifndef APB_IF_SV
-`define APB_IF_SV
+interface apb_interface (input clk, input rstn);
 
-interface apb_if (input clk, input rstn);
+    logic [31:0] paddr;
+    logic        pwrite;
+    logic        psel;
+    logic        penable;
+    logic [31:0] pwdata;
+    logic [31:0] prdata;
+    //apb3
+    logic        pready;
+    logic        pslverr;
 
-  logic [31:0] paddr;
-  logic        pwrite;
-  logic        psel;
-  logic        penable;
-  logic [31:0] pwdata;
-  logic [31:0] prdata;
-  logic        pready;
-  logic        pslverr;
+    // Control flags
+    bit has_checks = 1;
+    bit has_coverage = 1;
 
-  // Control flags
-  bit                has_checks = 1;
-  bit                has_coverage = 1;
+    import uvm_pkg::*;
+    `include "uvm_macros.svh"
+    // Actual Signals 
+    // USER: Add interface signals
 
-  import uvm_pkg::*;
-  `include "uvm_macros.svh"
-  // Actual Signals 
-  // USER: Add interface signals
+    clocking cb_mst @(posedge clk);
+        // USER: Add clocking block detail
+        default input #1ps output #1ps;
+        output paddr, pwrite, psel, penable, pwdata;
+        input prdata, pready, pslverr;
+    endclocking : cb_mst
 
-  clocking cb_mst @(posedge clk);
+    clocking cb_slv @(posedge clk);
     // USER: Add clocking block detail
-    default input #1ps output #1ps;
-    output paddr, pwrite, psel, penable, pwdata;
-    input prdata, pready, pslverr;
-  endclocking : cb_mst
+        default input #1ps output #1ps;
+        input paddr, pwrite, psel, penable, pwdata;
+        output prdata, pready, pslverr;
+    endclocking : cb_slv
 
-  clocking cb_slv @(posedge clk);
-   // USER: Add clocking block detail
-    default input #1ps output #1ps;
-    input paddr, pwrite, psel, penable, pwdata;
-    output prdata, pready, pslverr;
-  endclocking : cb_slv
-
-  clocking cb_mon @(posedge clk);
-   // USER: Add clocking block detail
-    default input #1ps output #1ps;
-    input paddr, pwrite, psel, penable, pwdata, prdata, pready, pslverr;
-  endclocking : cb_mon
+    clocking cb_mon @(posedge clk);
+    // USER: Add clocking block detail
+        default input #1ps output #1ps;
+        input paddr, pwrite, psel, penable, pwdata, prdata, pready, pslverr;
+    endclocking : cb_mon
 
   // Coverage and assertions to be implemented here.
   // USER: Add assertions/coverage here
@@ -188,6 +188,6 @@ interface apb_if (input clk, input rstn);
     join_none
   end
 
-endinterface : apb_if
+endinterface : apb_interface
 
 `endif // APB_IF_SV

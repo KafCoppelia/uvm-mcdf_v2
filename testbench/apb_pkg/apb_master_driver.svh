@@ -32,7 +32,7 @@ class apb_master_driver extends uvm_driver #(apb_transfer);
   //////////////////////////////////////////////////////////////////////////////
 
   // The virtual interface used to drive and view HDL signals.
-  virtual apb_if vif;
+  virtual apb_interface vif;
 
   // This is the method that is responsible for getting sequence transactions
   // and driving the transaction into the DUT

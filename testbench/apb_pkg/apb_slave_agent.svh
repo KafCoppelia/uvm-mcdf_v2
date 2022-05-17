@@ -16,7 +16,7 @@ class apb_slave_agent extends uvm_agent;
   apb_slave_driver driver;
   apb_slave_sequencer sequencer;
   apb_slave_monitor monitor;
-  virtual apb_if vif;
+  virtual apb_interface vif;
 
   // USER: Add your fields here
 
@@ -36,7 +36,7 @@ class apb_slave_agent extends uvm_agent;
   extern function void connect();
 
   // This method assigns the virtual interfaces to the agent's children
-  extern function void assign_vi(virtual apb_if vif);
+  extern function void assign_vi(virtual apb_interface vif);
 
   //////////////////////////////////////////////////////////////////////////////
   //

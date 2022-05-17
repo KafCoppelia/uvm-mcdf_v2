@@ -2,7 +2,7 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 `include "apb_tests.svh"
-`include "apb_if.sv"
+`include "apb_interface.sv"
 module apb_tb;
   bit clk, rstn;
   initial begin
@@ -21,11 +21,11 @@ module apb_tb;
     join_none
   end
 
-  apb_if intf(clk, rstn);
+  apb_interface intf(clk, rstn);
 
   initial begin
-    uvm_config_db#(virtual apb_if)::set(uvm_root::get(), "uvm_test_top.env.mst", "vif", intf);
-    uvm_config_db#(virtual apb_if)::set(uvm_root::get(), "uvm_test_top.env.slv", "vif", intf);
+    uvm_config_db#(virtual apb_interface)::set(uvm_root::get(), "uvm_test_top.env.mst", "vif", intf);
+    uvm_config_db#(virtual apb_interface)::set(uvm_root::get(), "uvm_test_top.env.slv", "vif", intf);
     run_test("apb_single_transaction_test");
   end
 

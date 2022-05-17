@@ -15,7 +15,7 @@ function void apb_slave_agent::build();
      cfg = apb_config::type_id::create("cfg");
   end
   // get virtual interface
-  if( !uvm_config_db#(virtual apb_if)::get(this,"","vif", vif)) begin
+  if( !uvm_config_db#(virtual apb_interface)::get(this,"","vif", vif)) begin
     `uvm_fatal("GETVIF","cannot get vif handle from config DB")
   end
   monitor = apb_slave_monitor::type_id::create("monitor",this);
@@ -35,7 +35,7 @@ function void apb_slave_agent::connect();
   end
 endfunction : connect
 
-function void apb_slave_agent::assign_vi(virtual apb_if vif);
+function void apb_slave_agent::assign_vi(virtual apb_interface vif);
   monitor.vif = vif;
    if (is_active == UVM_ACTIVE) begin
       sequencer.vif = vif; 

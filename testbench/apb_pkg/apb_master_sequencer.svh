@@ -26,7 +26,7 @@ class apb_master_sequencer extends uvm_sequencer #(apb_transfer);
   //////////////////////////////////////////////////////////////////////////////
 
   // The virtual interface used to drive and view HDL signals.
-  virtual apb_if vif;
+  virtual apb_interface vif;
 
 endclass : apb_master_sequencer
 

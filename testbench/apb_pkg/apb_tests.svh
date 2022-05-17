@@ -69,30 +69,30 @@ class apb_base_test_sequence extends uvm_sequence #(apb_transfer);
     end
   endfunction: check_mem_data
 
-  task wait_reset_release();
-    @(negedge apb_tb.rstn);
-    @(posedge apb_tb.rstn);
-  endtask
+    task wait_reset_release();
+        @(negedge tb_top.rstn);
+        @(posedge tb_top.rstn);
+    endtask
 
-  task wait_cycles(int n);
-    repeat(n) @(posedge apb_tb.clk);
-  endtask
+    task wait_cycles(int n);
+        repeat(n) @(posedge tb_top.clk);
+    endtask
 
-  function bit[31:0] get_rand_addr();
-    bit[31:0] addr;
-    void'(std::randomize(addr) with {addr[31:12] == 0; addr[1:0] == 0;addr != 0;});
-    return addr;
-  endfunction
+    function bit[31:0] get_rand_addr();
+        bit[31:0] addr;
+        void'(std::randomize(addr) with {addr[31:12] == 0; addr[1:0] == 0;addr != 0;});
+        return addr;
+    endfunction
 endclass
 
 class apb_single_transaction_sequence extends apb_base_test_sequence;
-  apb_master_single_write_sequence single_write_seq;
-  apb_master_single_read_sequence single_read_seq;
-  apb_master_write_read_sequence write_read_seq;
-  rand int test_num = 100;
-  constraint cstr{
-    soft test_num == 100;
-  }
+    apb_master_single_write_sequence single_write_seq;
+    apb_master_single_read_sequence single_read_seq;
+    apb_master_write_read_sequence write_read_seq;
+    rand int test_num = 100;
+    constraint cstr{
+        soft test_num == 100;
+    }
   `uvm_object_utils(apb_single_transaction_sequence)    
   function new(string name=""); 
     super.new(name);

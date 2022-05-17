@@ -1,2 +1,2 @@
 ../testbench/apb_pkg/apb_pkg.sv
-../testbench/apb_pkg/apb_tb.sv
+../testbench/tb_top.sv

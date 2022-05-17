@@ -21,7 +21,7 @@ class apb_slave_monitor extends uvm_monitor;
 
   // This property is the virtual interfaced needed for this component to drive
   // and view HDL signals. 
-  virtual apb_if vif;
+  virtual apb_interface vif;
   // USER: Add your fields here
 
   // The following is the analysis port that allows this monitor's transaction

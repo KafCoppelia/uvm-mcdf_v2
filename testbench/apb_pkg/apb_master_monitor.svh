@@ -21,7 +21,7 @@ class apb_master_monitor extends uvm_monitor;
 
   // This property is the virtual interface needed for this component to drive
   // and view HDL signals
-  virtual apb_if vif;
+  virtual apb_interface vif;
   // USER: Add your fields here
 
 
