@@ -42,63 +42,64 @@ interface apb_interface (input clk, input rstn);
         input paddr, pwrite, psel, penable, pwdata, prdata, pready, pslverr;
     endclocking : cb_mon
 
-  // Coverage and assertions to be implemented here.
-  // USER: Add assertions/coverage here
+    // Coverage and assertions to be implemented here.
+    // USER: Add assertions/coverage here
+`ifdef COV_EN
+    // APB command covergroup
+    covergroup cg_apb_command @(posedge clk iff rstn);
+        pwrite: coverpoint pwrite{
+            type_option.weight = 0;
+            bins write = {1};
+            bins read  = {0};
+        }
+        psel : coverpoint psel{
+            type_option.weight = 0;
+            bins sel   = {1};
+            bins unsel = {0};
+        }
+        cmd  : cross pwrite, psel{
+            bins cmd_write = binsof(psel.sel) && binsof(pwrite.write);
+            bins cmd_read  = binsof(psel.sel) && binsof(pwrite.read);
+            bins cmd_idle  = binsof(psel.unsel);
+        }
+    endgroup: cg_apb_command
 
-  // APB command covergroup
-  covergroup cg_apb_command @(posedge clk iff rstn);
-    pwrite: coverpoint pwrite{
-      type_option.weight = 0;
-      bins write = {1};
-      bins read  = {0};
+    // APB transaction timing group
+    covergroup cg_apb_trans_timing_group @(posedge clk iff rstn);
+        psel: coverpoint psel{
+            bins single   = (0 => 1 => 1  => 0); 
+            bins burst_2  = (0 => 1 [*4]  => 0); 
+            bins burst_4  = (0 => 1 [*8]  => 0); 
+            bins burst_8  = (0 => 1 [*16] => 0); 
+            bins burst_16 = (0 => 1 [*32] => 0); 
+            bins burst_32 = (0 => 1 [*64] => 0); 
+        }
+        penable: coverpoint penable {
+            bins single = (0 => 1 => 0 [*2:10] => 1);
+            bins burst  = (0 => 1 => 0         => 1);
+        }
+    endgroup: cg_apb_trans_timing_group
 
-    }
-    psel : coverpoint psel{
-      type_option.weight = 0;
-      bins sel   = {1};
-      bins unsel = {0};
-    }
-    cmd  : cross pwrite, psel{
-      bins cmd_write = binsof(psel.sel) && binsof(pwrite.write);
-      bins cmd_read  = binsof(psel.sel) && binsof(pwrite.read);
-      bins cmd_idle  = binsof(psel.unsel);
-    }
-  endgroup: cg_apb_command
+    // APB write & read order group
+    covergroup cg_apb_write_read_order_group @(posedge clk iff (rstn && penable));
+        write_read_order: coverpoint pwrite{
+            bins write_write = (1 => 1);
+            bins write_read  = (1 => 0);
+            bins read_write  = (0 => 1);
+            bins read_read   = (0 => 0);
+        } 
+    endgroup: cg_apb_write_read_order_group
 
-  // APB transaction timing group
-  covergroup cg_apb_trans_timing_group @(posedge clk iff rstn);
-    psel: coverpoint psel{
-      bins single   = (0 => 1 => 1  => 0); 
-      bins burst_2  = (0 => 1 [*4]  => 0); 
-      bins burst_4  = (0 => 1 [*8]  => 0); 
-      bins burst_8  = (0 => 1 [*16] => 0); 
-      bins burst_16 = (0 => 1 [*32] => 0); 
-      bins burst_32 = (0 => 1 [*64] => 0); 
-    }
-    penable: coverpoint penable {
-      bins single = (0 => 1 => 0 [*2:10] => 1);
-      bins burst  = (0 => 1 => 0         => 1);
-    }
-  endgroup: cg_apb_trans_timing_group
-
-  // APB write & read order group
-  covergroup cg_apb_write_read_order_group @(posedge clk iff (rstn && penable));
-    write_read_order: coverpoint pwrite{
-      bins write_write = (1 => 1);
-      bins write_read  = (1 => 0);
-      bins read_write  = (0 => 1);
-      bins read_read   = (0 => 0);
-    } 
-  endgroup: cg_apb_write_read_order_group
-
-  initial begin : coverage_control
-    if(has_coverage) begin
-      automatic cg_apb_command cg0 = new();
-      automatic cg_apb_trans_timing_group cg1 = new();
-      automatic cg_apb_write_read_order_group cg2 = new();
+    initial begin : coverage_control
+        if(has_coverage) begin
+            automatic cg_apb_command cg0 = new();
+            automatic cg_apb_trans_timing_group cg1 = new();
+            automatic cg_apb_write_read_order_group cg2 = new();
+        end
     end
-  end
+`endif
 
+`ifdef ASSERT
   // PROPERY ASSERTION
   property p_paddr_no_x;
     @(posedge clk) psel |-> !$isunknown(paddr);
@@ -136,57 +137,59 @@ interface apb_interface (input clk, input rstn);
     @(posedge clk) penable && !pwrite && pready |-> !$stable(prdata);
   endproperty: p_prdata_available_once_penable_rose
   assert property(p_prdata_available_once_penable_rose) else `uvm_error("ASSERT", "PRDATA not available once PENABLE rose")
+`endif
 
-  // PROPERTY COVERAGE
-  property p_write_during_nonburst_trans;
-    @(posedge clk) $rose(penable) |-> pwrite throughout (##1 (!penable)[*2] ##1 penable[=1]);
-  endproperty: p_write_during_nonburst_trans
-  cover property(p_write_during_nonburst_trans);
+`ifdef COV_EN
+    // PROPERTY COVERAGE
+    property p_write_during_nonburst_trans;
+        @(posedge clk) $rose(penable) |-> pwrite throughout (##1 (!penable)[*2] ##1 penable[=1]);
+    endproperty: p_write_during_nonburst_trans
+    cp_write_during_nonburst_trans: cover property(p_write_during_nonburst_trans);
 
-  property p_write_during_burst_trans;
-    @(posedge clk) $rose(penable) |-> pwrite throughout (##2 penable);
-  endproperty: p_write_during_burst_trans
-  cover property(p_write_during_burst_trans);
+    property p_write_during_burst_trans;
+        @(posedge clk) $rose(penable) |-> pwrite throughout (##2 penable);
+    endproperty: p_write_during_burst_trans
+    cp_write_during_burst_trans: cover property(p_write_during_burst_trans);
 
-  property p_write_read_burst_trans;
-    logic[31:0] addr;
-    @(posedge clk) ($rose(penable) && pwrite, addr=paddr) |-> (##2 ($rose(penable) && !pwrite && addr==paddr)); 
-  endproperty: p_write_read_burst_trans
-  cover property(p_write_read_burst_trans);
+    property p_write_read_burst_trans;
+        logic[31:0] addr;
+        @(posedge clk) ($rose(penable) && pwrite, addr=paddr) |-> (##2 ($rose(penable) && !pwrite && addr==paddr)); 
+    endproperty: p_write_read_burst_trans
+    cp_write_read_burst_trans: cover property(p_write_read_burst_trans);
 
-  property p_write_twice_read_burst_trans;
-    logic[31:0] addr;
-    @(posedge clk) ($rose(penable) && pwrite, addr=paddr) |-> (##2 ($rose(penable) && pwrite && addr==paddr) ##2 ($rose(penable) && !pwrite && addr==paddr) );
-  endproperty: p_write_twice_read_burst_trans
-  cover property(p_write_twice_read_burst_trans);
+    property p_write_twice_read_burst_trans;
+        logic[31:0] addr;
+        @(posedge clk) ($rose(penable) && pwrite, addr=paddr) |-> (##2 ($rose(penable) && pwrite && addr==paddr) ##2 ($rose(penable) && !pwrite && addr==paddr) );
+    endproperty: p_write_twice_read_burst_trans
+    cp_write_twice_read_burst_trans: cover property(p_write_twice_read_burst_trans);
 
-  property p_read_during_nonburst_trans;
-    @(posedge clk) $rose(penable) |-> !pwrite throughout (##1 (!penable)[*2] ##1 penable[=1]);
-  endproperty: p_read_during_nonburst_trans
-  cover property(p_read_during_nonburst_trans);
+    property p_read_during_nonburst_trans;
+        @(posedge clk) $rose(penable) |-> !pwrite throughout (##1 (!penable)[*2] ##1 penable[=1]);
+    endproperty: p_read_during_nonburst_trans
+    cp_read_during_nonburst_trans: cover property(p_read_during_nonburst_trans);
 
-  property p_read_during_burst_trans;
-    @(posedge clk) $rose(penable) |-> !pwrite throughout (##2 penable);
-  endproperty: p_read_during_burst_trans
-  cover property(p_read_during_burst_trans);
+    property p_read_during_burst_trans;
+        @(posedge clk) $rose(penable) |-> !pwrite throughout (##2 penable);
+    endproperty: p_read_during_burst_trans
+    cp_read_during_burst_trans: cover property(p_read_during_burst_trans);
 
-  property p_read_write_read_burst_trans;
-    logic[31:0] addr;
-    @(posedge clk) ($rose(penable) && pwrite, addr=paddr) |-> ##2 ($rose(penable) && !pwrite && addr==paddr);  
-  endproperty: p_read_write_read_burst_trans
-  cover property(p_read_write_read_burst_trans);
+    property p_read_write_read_burst_trans;
+        logic[31:0] addr;
+        @(posedge clk) ($rose(penable) && pwrite, addr=paddr) |-> ##2 ($rose(penable) && !pwrite && addr==paddr);  
+    endproperty: p_read_write_read_burst_trans
+    cp_read_write_read_burst_trans: cover property(p_read_write_read_burst_trans);
+`endif
 
-
-  initial begin: assertion_control
-    fork
-      forever begin
-        wait(rstn == 0);
-        $assertoff();
-        wait(rstn == 1);
-        $asserton();
-      end
-    join_none
-  end
+    initial begin: assertion_control
+        fork
+        forever begin
+            wait(rstn == 0);
+            $assertoff();
+            wait(rstn == 1);
+            $asserton();
+        end
+        join_none
+    end
 
 endinterface : apb_interface
 

@@ -1,6 +1,7 @@
 *
 !.gitignore
 !Makefile
+!runlist
 !rtl.list
 !uvm.list
 !sim.py
