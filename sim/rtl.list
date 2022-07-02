@@ -1,2 +1,9 @@
-../testbench/apb_pkg/apb_pkg.sv
-../testbench/tb_top.sv
++incdir+../dut
+
+../dut/param_def.v
+../dut/reg_if.v
+../dut/RR_arbiter.v
+../dut/slave_node.v
+../dut/sync_dff_fifo.v
+../dut/formater.v
+../dut/mcdf.v
