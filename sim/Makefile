@@ -37,7 +37,7 @@ sim:
 	+TESTNAME=${TESTNAME} +UVM_TESTNAME=${TESTNAME}
 
 verdi:
-	verdi --ssv -ssy -ssf tb.fsdb -simflow -simBin ./simv &
+	verdi -ssf ${TESTNAME}_sim_dir/${TESTNAME}.fsdb -simflow -simBin ./simv &
 
 merge.vdb:
 	urg -full64 -format both -dir ./coverage/*.vdb -dbname merge.vdb
